@@ -1,0 +1,17 @@
+variables:
+  DOCKERFILE: Dockerfile
+  WORKING_DIR: .
+  IMAGE_NAMES: $CI_PROJECT_NAME:$CI_COMMIT_BRANCH $CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA $CI_PROJECT_NAME:latest
+
+
+.kaniko:build-push:
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - export ALL_DESTINATIONS=""
+    - for I in $IMAGE_NAMES; do export ALL_DESTINATIONS="$ALL_DESTINATIONS --destination $IMAGE_REPOSITORY/$I"; done
+    - mkdir -p /kaniko/.docker
+    - echo "$DOCKER_AUTH" > /kaniko/.docker/config.json
+    - cat /kaniko/.docker/config.json
+    - /kaniko/executor --context="$CI_PROJECT_DIR/$WORKING_DIR" --dockerfile="$CI_PROJECT_DIR/$DOCKERFILE" $ALL_DESTINATIONS
