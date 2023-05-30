@@ -23,5 +23,5 @@ variables:
     - /kaniko/executor 
       --context="$CI_PROJECT_DIR/$WORKING_DIR" 
       --dockerfile="$CI_PROJECT_DIR/$DOCKERFILE" 
-      $BUILD_ARGS
+      $BUILD_ARGS $EXTRA_KANIKO_ARGS
       $ALL_DESTINATIONS

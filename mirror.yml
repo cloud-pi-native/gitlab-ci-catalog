@@ -1,15 +1,18 @@
 .repo_pull_sync:
-  image: ghcr.io/hexa-forge/git-sync:latest
+  image: ghcr.io/cloud-pi-native/git-sync:latest
+  before_script:
+    - export EXTRA_ARGS=""
+    - if [ ! -z $http_proxy ]; then export BUILD_ARGS="$BUILD_ARGS --build-arg http_proxy=$http_proxy"; fi
   script:
     - export VAULT_ADDR=$VAULT_SERVER_URL
-    - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=default-ci jwt=$CI_JOB_JWT)"
-    - export GIT_INPUT_USER=`vault kv get -field=GIT_INPUT_USER ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
-    - export GIT_INPUT_PASSWORD=`vault kv get -field=GIT_INPUT_PASSWORD ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
-    - export GIT_INPUT_URL=`vault kv get -field=GIT_INPUT_URL ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
-    - export GIT_OUTPUT_USER=`vault kv get -field=GIT_OUTPUT_USER ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
-    - export GIT_OUTPUT_PASSWORD=`vault kv get -field=GIT_OUTPUT_PASSWORD ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
-    - export GIT_OUTPUT_URL=`vault kv get -field=GIT_OUTPUT_URL ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
-    - git clone "https://${GIT_INPUT_USER}:${GIT_INPUT_PASSWORD}@${GIT_INPUT_URL}" ./clonerepo
+    - export VAULT_TOKEN="$(vault write ${EXTRA_VAULT_ARGS} -field=token auth/jwt/login role=default-ci jwt=$CI_JOB_JWT)"
+    - export GIT_INPUT_USER=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_INPUT_USER ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
+    - export GIT_INPUT_PASSWORD=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_INPUT_PASSWORD ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
+    - export GIT_INPUT_URL=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_INPUT_URL ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
+    - export GIT_OUTPUT_USER=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_OUTPUT_USER ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
+    - export GIT_OUTPUT_PASSWORD=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_OUTPUT_PASSWORD ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
+    - export GIT_OUTPUT_URL=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_OUTPUT_URL ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}`
+    - git clone ${EXTRA_GIT_ARGS} "https://${GIT_INPUT_USER}:${GIT_INPUT_PASSWORD}@${GIT_INPUT_URL}" ./clonerepo
     - cd clonerepo
     - git checkout ${GIT_BRANCH_DEPLOY}
-    - git push --prune "https://${GIT_OUTPUT_USER}:${GIT_OUTPUT_PASSWORD}@${GIT_OUTPUT_URL}" -f
+    - git push --prune "https://${GIT_OUTPUT_USER}:${GIT_OUTPUT_PASSWORD}@${GIT_OUTPUT_URL}" -f ${EXTRA_GIT_ARGS}
