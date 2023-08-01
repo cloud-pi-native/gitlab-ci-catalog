@@ -1,6 +1,6 @@
 .vault:read_secret:
   image:
-    name: vault:latest
+    name: docker.io/vault:1.13.3
   script:
     - export PROJECT_PATH=`echo "$CI_PROJECT_NAMESPACE" | awk -F '/' '{print $(NF - 1)"-"$(NF)}'`
     - export VAULT_ADDR=$VAULT_SERVER_URL
