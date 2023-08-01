@@ -15,4 +15,4 @@
     - git clone ${EXTRA_GIT_ARGS} "https://${GIT_INPUT_USER}:${GIT_INPUT_PASSWORD}@${GIT_INPUT_URL}" ./clonerepo
     - cd clonerepo
     - git checkout ${GIT_BRANCH_DEPLOY}
-    - git push --prune "https://${GIT_OUTPUT_USER}:${GIT_OUTPUT_PASSWORD}@${GIT_OUTPUT_URL}" -f ${EXTRA_GIT_ARGS}
+    - git push --prune ${EXTRA_GIT_ARGS} "https://${GIT_OUTPUT_USER}:${GIT_OUTPUT_PASSWORD}@${GIT_OUTPUT_URL}" -f 
