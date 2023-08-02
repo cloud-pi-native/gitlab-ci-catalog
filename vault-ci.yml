@@ -7,6 +7,7 @@
     - export VAULT_TOKEN="$(vault write $EXTRA_VAULT_ARGS -field=token auth/jwt/login role=default-ci jwt=$CI_JOB_JWT)"
     - export DOCKER_AUTH=`vault kv get $EXTRA_VAULT_ARGS -field=DOCKER_CONFIG ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY`
     - export REGISTRY_HOST=`vault kv get $EXTRA_VAULT_ARGS -field=HOST ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY`
+    - export SONAR_TOKEN=`vault kv get $EXTRA_VAULT_ARGS -field=SONAR_TOKEN ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/SONAR`
     - export IMAGE_REPOSITORY="${REGISTRY_HOST}/${PROJECT_PATH}"
     - |
       cat <<EOF > vault.env
@@ -14,6 +15,7 @@
       IMAGE_REPOSITORY=$IMAGE_REPOSITORY
       PROJECT_PATH=$PROJECT_PATH
       DOCKER_AUTH=$DOCKER_AUTH
+      SONAR_TOKEN=$SONAR_TOKEN
       EOF
   artifacts:
     reports:
