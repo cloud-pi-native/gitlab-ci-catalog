@@ -1,9 +1,8 @@
-variables:
-  DOCKERFILE: Dockerfile
-  WORKING_DIR: .
-  IMAGE_NAMES: $CI_PROJECT_NAME:$CI_COMMIT_BRANCH $CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA $CI_PROJECT_NAME:latest
-
 .kaniko:build-push:
+  variables:
+    DOCKERFILE: Dockerfile
+    WORKING_DIR: .
+    IMAGE_NAMES: $CI_PROJECT_NAME:$CI_COMMIT_BRANCH $CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA $CI_PROJECT_NAME:latest
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
@@ -25,3 +24,18 @@ variables:
       --dockerfile="$CI_PROJECT_DIR/$DOCKERFILE" 
       $BUILD_ARGS $EXTRA_KANIKO_ARGS
       $ALL_DESTINATIONS
+
+.kaniko:simple-build-push:
+  variables:
+    DOCKERFILE: Dockerfile
+    WORKING_DIR: .
+    IMAGE_NAME: $IMAGE_NAMES
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    # CA
+    - if [ ! -z $CA_BUNDLE ]; then cat $CA_BUNDLE >> /kaniko/ssl/certs/additional-ca-cert-bundle.crt; fi
+    - mkdir -p /kaniko/.docker
+    - echo "$DOCKER_AUTH" > /kaniko/.docker/config.json
+    - /kaniko/executor --build-arg http_proxy=$http_proxy --build-arg https_proxy=$https_proxy --build-arg no_proxy=$no_proxy --context="$CI_PROJECT_DIR" --dockerfile="$CI_PROJECT_DIR/$DOCKERFILE" --destination $REGISTRY_URL/$IMAGE_NAME:$TAG
