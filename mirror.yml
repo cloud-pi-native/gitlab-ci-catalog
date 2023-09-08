@@ -1,18 +1,21 @@
 .repo_pull_sync:
-  image: ghcr.io/cloud-pi-native/git-sync:latest
+  image: ghcr.io/cloud-pi-native/git-sync:main
   before_script:
     - export EXTRA_ARGS=""
     - if [ ! -z $http_proxy ]; then export BUILD_ARGS="$BUILD_ARGS --build-arg http_proxy=$http_proxy"; fi
   script:
+    # Set Vault vars
     - export VAULT_ADDR=$VAULT_SERVER_URL
     - export VAULT_TOKEN="$(vault write ${EXTRA_VAULT_ARGS} -field=token auth/jwt/login role=default-ci jwt=$CI_JOB_JWT)"
-    - export GIT_INPUT_USER=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_INPUT_USER ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${PROJECT_NAME}-mirror`
-    - export GIT_INPUT_PASSWORD=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_INPUT_PASSWORD ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${PROJECT_NAME}-mirror`
-    - export GIT_INPUT_URL=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_INPUT_URL ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${PROJECT_NAME}-mirror`
-    - export GIT_OUTPUT_USER=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_OUTPUT_USER ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${PROJECT_NAME}-mirror`
-    - export GIT_OUTPUT_PASSWORD=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_OUTPUT_PASSWORD ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${PROJECT_NAME}-mirror`
-    - export GIT_OUTPUT_URL=`vault kv get ${EXTRA_VAULT_ARGS} -field=GIT_OUTPUT_URL ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${PROJECT_NAME}-mirror`
+    - export VAULT_MIRROR_PATH="${VAULT_KV}/${CI_PROJECT_NAMESPACE}/${PROJECT_NAME}-mirror"
+    # Get secrets in Vault
+    - export SECRETS=`vault kv get -format json ${EXTRA_VAULT_ARGS} ${VAULT_MIRROR_PATH}`
+    - export GIT_INPUT_USER=`jq -r .data.data.GIT_INPUT_USER <<< "$SECRETS"`
+    - export GIT_INPUT_PASSWORD=`jq -r .data.data.GIT_INPUT_PASSWORD <<< "$SECRETS"`
+    - export GIT_INPUT_URL=`jq -r .data.data.GIT_INPUT_URL <<< "$SECRETS"`
+    - export GIT_OUTPUT_URL=`jq -r .data.data.GIT_OUTPUT_URL <<< "$SECRETS"`
+    # Sync branch
     - git clone ${EXTRA_GIT_ARGS} "https://${GIT_INPUT_USER}:${GIT_INPUT_PASSWORD}@${GIT_INPUT_URL}" ./clonerepo
     - cd clonerepo
     - git checkout ${GIT_BRANCH_DEPLOY}
-    - git ${EXTRA_GIT_ARGS} push --force --prune "https://${GIT_OUTPUT_USER}:${GIT_OUTPUT_PASSWORD}@${GIT_OUTPUT_URL}" ${GIT_BRANCH_DEPLOY}
+    - git ${EXTRA_GIT_ARGS} push --force --prune "https://${MIRROR_USER}:${MIRROR_TOKEN}@${GIT_OUTPUT_URL}" ${GIT_BRANCH_DEPLOY}
