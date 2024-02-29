@@ -24,4 +24,4 @@
   artifacts:
     reports:
       dotenv: vault.env
-    expire_in: 1 seconds
+    expire_in: 5 min 
