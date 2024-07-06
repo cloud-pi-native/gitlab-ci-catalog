@@ -1,6 +1,6 @@
 .vault:read_secret:
   image:
-    name: docker.io/vault:1.13.3
+    name: docker.io/hashicorp/vault:1.17.1
   id_tokens:
     VAULT_ID_TOKEN:
       aud: $VAULT_SERVER_URL
