@@ -6,7 +6,7 @@ variables:
 
 .sonar:sonar-scanner:
   image: 
-    name: sonarsource/sonar-scanner-cli:5.0.1
+    name: docker.io/sonarsource/sonar-scanner-cli:5.0.1
     entrypoint: [""]
   variables:
     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
