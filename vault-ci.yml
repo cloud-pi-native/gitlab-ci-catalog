@@ -1,10 +1,13 @@
 .vault:read_secret:
   image:
-    name: docker.io/vault:1.13.3
+    name: docker.io/hashicorp/vault:1.17.1
+  id_tokens:
+    VAULT_ID_TOKEN:
+      aud: $VAULT_SERVER_URL
   script:
     - export PROJECT_PATH=`echo "$CI_PROJECT_NAMESPACE" | awk -F '/' '{print $(NF - 1)"-"$(NF)}'`
     - export VAULT_ADDR=$VAULT_SERVER_URL
-    - export VAULT_TOKEN="$(vault write $EXTRA_VAULT_ARGS -field=token auth/jwt/login role=default-ci jwt=$CI_JOB_JWT)"
+    - export VAULT_TOKEN="$(vault write $EXTRA_VAULT_ARGS -field=token auth/jwt/login role=default-ci jwt=$VAULT_ID_TOKEN)"
     - export DOCKER_AUTH=`vault kv get $EXTRA_VAULT_ARGS -field=DOCKER_CONFIG ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY/rw-robot`
     - export REGISTRY_HOST=`vault kv get $EXTRA_VAULT_ARGS -field=HOST ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY/rw-robot`
     - export SONAR_TOKEN=`vault kv get $EXTRA_VAULT_ARGS -field=SONAR_TOKEN ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/SONAR`
