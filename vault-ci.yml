@@ -7,8 +7,7 @@
   script:
     # CA
     - if [ ! -z $CA_BUNDLE ]; then
-        cat $CA_BUNDLE >> /tmp/additional-ca-cert-bundle.pem;
-        export VAULT_CACERT=/tmp/additional-ca-cert-bundle.pem;
+        export VAULT_CACERT=$CA_BUNDLE;
       fi
     - export PROJECT_PATH=`echo "$CI_PROJECT_NAMESPACE" | awk -F '/' '{print $(NF - 1)"-"$(NF)}'`
     - export VAULT_ADDR=$VAULT_SERVER_URL
