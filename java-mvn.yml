@@ -8,7 +8,9 @@
   script:
     - cd $WORKING_DIR
     - echo ${PROJECT_PATH}
-    - mvn $MAVEN_CLI_OPTS clean deploy -s $MVN_CONFIG_FILE -DaltReleaseDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/${PROJECT_PATH}-repository-release/ -DaltSnapshotDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/${PROJECT_PATH}-repository-snapshot/
+#    - mvn $MAVEN_CLI_OPTS clean deploy -s $MVN_CONFIG_FILE -DaltReleaseDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/${PROJECT_PATH}-repository-release/ -DaltSnapshotDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/${PROJECT_PATH}-repository-snapshot/
+    - mvn $MAVEN_CLI_OPTS clean package -s $MVN_CONFIG_FILE
+
   artifacts:
     paths:
       - ${ARTEFACT_DIR}
