@@ -1,0 +1,71 @@
+# Import des catalog des jobs CPiN
+include:
+  - project: $CATALOG_PATH
+    file:
+      - vault-ci.yml
+      - kaniko-ci.yml
+      - java-mvn.yml
+    ref: main
+
+# default:
+#  tags:
+#    - ADD_CUSTOM_TAG_HERE
+
+# Definition des path à mettre en cache .m2/repository en cas de build java, node_modules pour les build nodejs
+cache:
+  paths:
+    - .m2/repository/
+    - node_modules
+
+# Variables générales au build
+variables:
+  TAG: "${CI_COMMIT_REF_SLUG}"
+  DOCKERFILE: Dockerfile
+  REGISTRY_URL: "${IMAGE_REPOSITORY}"
+
+# Differents stages du build. Le stage read-secret est obligatoire et permet de recuperer les secret CI du projet
+stages:
+  - read-secret
+  - build-app
+  - docker-build
+
+# Lecture des secrets CI du build
+read_secret:
+  stage: read-secret
+  extends:
+    - .vault:read_secret
+
+# Build de l'application, a adapter en fonciton de la technologie applicative. Peut egalement se faire a l'etape Docker dans le cas d'un multi stage build docker
+package-app:
+  variables:
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+    MAVEN_CLI_OPTS: ""
+    MVN_CONFIG_FILE: $MVN_CONFIG
+    BUILD_IMAGE_NAME: maven:3.8-openjdk-17
+    WORKING_DIR: .
+    ARTEFACT_DIR: ./target/*.jar
+  stage: build-app
+  extends:
+    - .java:build
+
+sonar-app:
+  variables:
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+    MAVEN_CLI_OPTS: ""
+    MVN_CONFIG_FILE: $MVN_CONFIG
+    BUILD_IMAGE_NAME: maven:3.8-openjdk-17
+    WORKING_DIR: .
+    ARTEFACT_DIR: ./target/*.jar
+  stage: sonar
+  extends:
+    - .java:sonar
+
+
+# Docker build et push de l'image sur le repo Harbor
+docker-build:
+  variables:
+    WORKING_DIR: "."
+    IMAGE_NAME: java-demo
+  stage: docker-build
+  extends:
+    - .kaniko:simple-build-push
