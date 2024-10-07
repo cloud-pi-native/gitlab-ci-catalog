@@ -37,9 +37,11 @@ read_secret:
     - .vault:read_secret
 ```
 
+__:warning: Cette étape **DOIT** être la 1er étape de votre pipeline pour pouvoir récupérer les différents secret nécessaire au fonctionnement des autres étape de la pipeline.__
+
 ## Build applicatif (optionnel)
 
-L'etape ```build app``` permet de construire l'artefact applicatif (hors image Docker) et est à adapter en fonciton de la technologie applicative. Cette étape peut egalement se faire lors de l'etape ```build-docker``` dans le cas d'un multi stage build docker.
+L'etape ```build app``` permet de construire l'artefact applicatif (hors image Docker) et est à adapter en fonction de la technologie applicative. Cette étape peut egalement se faire lors de l'etape ```build-docker``` dans le cas d'un multi stage build docker.
 L'équipe CPiN fourni quelques exemple de technologie notamment java par le fichier [java-mvn](./java-mvn.yml)
 
 Ce fichier comporte deux jobs :

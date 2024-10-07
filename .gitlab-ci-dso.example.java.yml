@@ -27,6 +27,7 @@ variables:
 stages:
   - read-secret
   - build-app
+  - sonar
   - docker-build
 
 # Lecture des secrets CI du build
