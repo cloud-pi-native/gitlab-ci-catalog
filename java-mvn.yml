@@ -1,10 +1,17 @@
-.java:build:
+.java:init:
   image:
     name: ${BUILD_IMAGE_NAME}
+  variables:
+    MAVEN_CLI_OPTS: " $MAVEN_CLI_OPTS -Djavax.net.ssl.trustStore=maven.jks -Djavax.net.ssl.trustStorePassword=changeit " 
+  before_script:
+    - keytool -v -alias mavensrv -import -file $CA_BUNDLE -keystore maven.jks -storepass changeit -noprompt 
   cache:
     key: "$CI_COMMIT_REF_SLUG"
     paths:
       - .m2/repository/
+
+.java:build:
+  extends: .java:init
   script:
     - cd $WORKING_DIR
     - echo ${PROJECT_PATH}
@@ -16,12 +23,7 @@
   interruptible: true
 
 .java:sonar-jacoco:
-  image:
-    name: ${BUILD_IMAGE_NAME}
-  cache:
-    key: "$CI_COMMIT_REF_SLUG"
-    paths:
-      - .m2/repository/
+  extends: .java:init
   variables:
     GIT_DEPTH: "0"
   script:
@@ -30,12 +32,7 @@
   allow_failure: true
 
 .java:sonar:
-  image:
-    name: ${BUILD_IMAGE_NAME}
-  cache:
-    key: "$CI_COMMIT_REF_SLUG"
-    paths:
-      - .m2/repository/
+  extends: .java:init
   variables:
     GIT_DEPTH: "0"
   script:
@@ -44,12 +41,7 @@
   allow_failure: true
 
 .java:deploy:
-  image:
-    name: ${BUILD_IMAGE_NAME}
-  cache:
-    key: "$CI_COMMIT_REF_SLUG"
-    paths:
-      - .m2/repository/
+  extends: .java:init
   script:
     - cd $WORKING_DIR
     - echo ${PROJECT_PATH}
