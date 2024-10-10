@@ -45,7 +45,8 @@
     GIT_DEPTH: "0"
   script:
     - cd $WORKING_DIR
-    - if [ ! -z $CA_BUNDLE ]; then
+    - >
+      if [ ! -z $CA_BUNDLE ]; then
         mvn $MAVEN_CLI_ADDITIONAL_OPTS clean package test sonar:sonar -Dsonar.qualitygate.wait=true -Dsonar.projectKey=${PROJECT_KEY} -Dsonar.login=$SONAR_TOKEN -s $MVN_CONFIG_FILE
       else
         mvn $MAVEN_CLI_OPTS clean package test sonar:sonar -Dsonar.qualitygate.wait=true -Dsonar.projectKey=${PROJECT_KEY} -Dsonar.login=$SONAR_TOKEN -s $MVN_CONFIG_FILE
@@ -57,7 +58,8 @@
   script:
     - cd $WORKING_DIR
     - echo ${PROJECT_PATH}
-    - if [ ! -z $CA_BUNDLE ]; then
+    - >
+      if [ ! -z $CA_BUNDLE ]; then
         mvn $MAVEN_CLI_ADDITIONAL_OPTS clean deploy -s $MVN_CONFIG_FILE -DaltReleaseDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/repository/${PROJECT_PATH}-repository-release/ -DaltSnapshotDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/repository/${PROJECT_PATH}-repository-snapshot/
       else
         mvn $MAVEN_CLI_OPTS clean deploy -s $MVN_CONFIG_FILE -DaltReleaseDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/repository/${PROJECT_PATH}-repository-release/ -DaltSnapshotDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/repository/${PROJECT_PATH}-repository-snapshot/
