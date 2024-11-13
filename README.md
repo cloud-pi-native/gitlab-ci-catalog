@@ -67,6 +67,24 @@ Il prend les paramètres suivants :
 
 > A noter que les jobs sonar acceptent les erreurs et possède l'attribut ```allow_failure: true```
 
+### Build NodeJS
+
+Le fichier `node-npm.yml` contient le job suivant: `.npm:build-publish`.
+Cette étape va construire l'application/paquet NodeJS avec NPM. Les paquets sont récupéres depuis internet, et depuis le Nexus DSO pour vos paquets privés. Si le projet est un paquet, il est automatiquement poussé vers Nexus.
+(actuellement il n'y a pas de proxy Nexus-NPM automagique)
+
+Vous pouvez avoir par exemple un premier dépôt qui construit `@mon-groupe/mon-paquet` et le publie sur Nexus.
+Ensuite dans un deuxième dépôt, vous voulez utiliser ce paquet en dépendance.
+
+Il faut dire à NPM de récupérer ce paquet non pas depuis internet, mais depuis le Nexus de votre projet. Pour cela, configurez la variable `PRIVATE_GROUPS` avec vos groupes séparés par des espaces (en incluant le arobase).
+Normalement, la CI devrait détecter automatiquement les dépendances privées si vous ne travaillez pas uniquement sur le gitlab DSO; mais elle n'arrive pas à détecter les dépendances transitives.
+
+Paramètres:
+  - `WORKING_DIR: .` Répertoire de travail, contenant le fichier `package.json` du projet
+  - `AUTODETECT_PRIVATE_GROUP: 1` mettre à `0` pour désactiver la détection automatique des paquets privés
+  - `ARTEFACT_DIR: out` le dossier contenent les fichiers générés par votre build NPM 
+  - `BUILD_IMAGE_NAME: node:lts-bullseye` Image utilisée pour builder l'artefact
+
 ## Build docker
 
 L'etape ```kaniko-build``` permet de construire une image Docker à partir d'un dockerfile et de l'envoyer sur Harbor. La construction d'image docker étant réalisé dans Docker sur Openshit, il est nécessaire d'utiliser Kaniko.
