@@ -1,0 +1,55 @@
+.npm:build-publish:
+  stage: package-app
+  image: ${BUILD_IMAGE_NAME}
+  variables:
+    WORKING_DIR: .
+    ARTEFACT_DIR: 'out/'
+
+    NEXUS_NPM_REGISTRY: "${NEXUS_HOSTNAME}/repository/${PROJECT_PATH}-npm"
+
+    PRIVATE_GROUPS: '' # mettez ici vos @groups qui contiennt des paquets privés à récupérer depuis le Nexus DSO
+    AUTODETECT_PRIVATE_GROUP: 1 # essaie de détecter les groupes privées depuis le package-lock.json
+
+  before_script:
+    - cd "${WORKING_DIR}"
+    - >- # configuration HTTPS: on trust le fichier $CA_BUNDLE s'il existe
+      cat /etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt $CA_BUNDLE > .ca-bundle.crt || true
+    - npm set strict-ssl true # (defaut)
+    - npm set cafile .ca-bundle.crt
+
+    # configuration des dépendances
+    - | # détecte les groupes et active le registry Nexus dessus
+      if [[ $AUTODETECT_PRIVATE_GROUP -eq 1 ]]; then
+        PRIVATE_GROUPS="$PRIVATE_GROUPS $(node -e "let obj = JSON.parse(require('fs').readFileSync('package-lock.json'));for (let key in obj.packages) {let url = obj.packages[key].resolved;if (url != undefined) {if (!url.startsWith('https://registry.npmjs.org')) {let group = key.replace('node_modules/', '');if (group.startsWith('@')) {console.log(group.split('/')[0]);}}}}")"
+      fi
+      for group in $PRIVATE_GROUPS; do
+        npm config set "${group}:registry" "https://${NEXUS_NPM_REGISTRY}/"
+      done
+
+    # identifiants Nexus DSO
+    - export NPM_CREDS=$(echo -n "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" | base64)
+    - npm config set "//${NEXUS_NPM_REGISTRY}/:_auth=${NPM_CREDS}"
+
+    # cette commande node édite le package-lock.json pour 'oublier' les URLs de NPM public et pouvoir utiliser Nexus
+    - node -e "const fs = require('fs');let data = fs.readFileSync('package-lock.json');let obj = JSON.parse(data);for (let key in obj.packages) {delete obj.packages[key].resolved;delete obj.packages[key].integrity;} let jsonData = JSON.stringify(obj, null, 2);fs.writeFileSync('package-lock.json', jsonData);"
+
+  script:
+    - npm clean-install --no-audit --production=false # on installe les devDependencies
+    - NODE_ENV=production npm run build
+    - npm config set loglevel warn # la commande publish sort beaucoup trop de logs en mode notice (pour les gros projets)
+    - |- # si le package est une librarie, on la publie sur nexus
+      if grep -q '"files":' package.json; then
+        npm publish --registry="https://${NEXUS_NPM_REGISTRY}/"
+      fi
+  after_script:
+    - >- # on sort les logs NPM en artifact si le job échoue
+      [[ $CI_JOB_STATUS != 'success' ]] && cp -fr ~/.npm/_logs/ npm_logs
+
+  artifacts:
+    paths:
+      - "$ARTEFACT_DIR"
+      - npm_logs
+    when: always
+  cache:
+    paths:
+      - 'node_modules'

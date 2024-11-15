@@ -5,6 +5,7 @@ include:
       - vault-ci.yml
       - kaniko-ci.yml
       - java-mvn.yml
+      - node-npm.yml
     ref: main
 
 # default:
@@ -47,6 +48,17 @@ package-app:
   stage: build-app
   extends:
     - .java:build
+
+publish-npm-nexus:
+  variables:
+    BUILD_IMAGE_NAME: node:lts-bullseye
+    WORKING_DIR: .
+    ARTEFACT_DIR: 'out/'
+    PRIVATE_GROUPS: ''
+    AUTODETECT_PRIVATE_GROUP: 1
+  stage: build-app
+  extends: 
+    - .npm:build-publish
 
 sonar-app:
   variables:
