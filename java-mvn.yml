@@ -1,13 +1,13 @@
 .java:init:
   image:
     name: ${BUILD_IMAGE_NAME}
-  variables:
-    MAVEN_CLI_ADDITIONAL_OPTS: " $MAVEN_CLI_OPTS -Djavax.net.ssl.trustStore=maven.jks -Djavax.net.ssl.trustStorePassword=changeit "
   before_script:
     - |
         if [ ! -z $CA_BUNDLE ]; then
-          keytool -v -alias mavensrv -import -file $CA_BUNDLE -keystore maven.jks -storepass changeit -noprompt
-        fi 
+          DEFAULT_TRUSTSTORE="$JAVA_HOME/lib/security/cacerts"
+          DEFAULT_TRUSTSTORE_PASS="changeit"
+          keytool -import -alias mavensrv -file "$CA_BUNDLE" -keystore "$DEFAULT_TRUSTSTORE" -storepass "$DEFAULT_TRUSTSTORE_PASS" -noprompt
+        fi
   cache:
     key: "$CI_COMMIT_REF_SLUG"
     paths:
@@ -18,26 +18,12 @@
   script:
     - cd $WORKING_DIR
     - echo ${PROJECT_PATH}
-    - >
-      if [ ! -z $CA_BUNDLE ]; then
-        mvn $MAVEN_CLI_ADDITIONAL_OPTS clean package -s $MVN_CONFIG_FILE
-      else
-        mvn $MAVEN_CLI_OPTS clean package -s $MVN_CONFIG_FILE
-      fi
+    - mvn $MAVEN_CLI_OPTS clean package -gs $MVN_CONFIG_FILE
   artifacts:
     paths:
       - ${ARTEFACT_DIR}
     expire_in: 1 seconds
   interruptible: true
-
-.java:sonar-jacoco:
-  extends: .java:init
-  variables:
-    GIT_DEPTH: "0"
-  script:
-    - cd $WORKING_DIR
-    - mvn $MAVEN_CLI_ADDITIONAL_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent package test jacoco:report sonar:sonar -Dsonar.qualitygate.wait=true -Dsonar.login=$SONAR_TOKEN -s $MVN_CONFIG_FILE
-  allow_failure: true
 
 .java:sonar:
   extends: .java:init
@@ -45,13 +31,7 @@
     GIT_DEPTH: "0"
   script:
     - cd $WORKING_DIR
-    - >
-      if [ ! -z $CA_BUNDLE ]; then
-        mvn $MAVEN_CLI_ADDITIONAL_OPTS clean package test sonar:sonar -Dsonar.qualitygate.wait=true -Dsonar.projectKey=${PROJECT_KEY} -Dsonar.login=$SONAR_TOKEN -s $MVN_CONFIG_FILE
-      else
-        mvn $MAVEN_CLI_OPTS clean package test sonar:sonar -Dsonar.qualitygate.wait=true -Dsonar.projectKey=${PROJECT_KEY} -Dsonar.login=$SONAR_TOKEN -s $MVN_CONFIG_FILE
-      fi
-  allow_failure: true
+    - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent package test org.jacoco:jacoco-maven-plugin:report org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar -Dsonar.qualitygate.wait=true -Dsonar.projectName=$PROJECT_NAME -Dsonar.projectKey=$PROJECT_KEY -Dsonar.token=$SONAR_TOKEN -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT -gs $MVN_CONFIG_FILE
 
 .java:deploy:
   extends: .java:init
@@ -59,11 +39,7 @@
     - cd $WORKING_DIR
     - echo ${PROJECT_PATH}
     - >
-      if [ ! -z $CA_BUNDLE ]; then
-        mvn $MAVEN_CLI_ADDITIONAL_OPTS clean deploy -s $MVN_CONFIG_FILE -DaltReleaseDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/repository/${PROJECT_PATH}-repository-release/ -DaltSnapshotDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/repository/${PROJECT_PATH}-repository-snapshot/
-      else
-        mvn $MAVEN_CLI_OPTS clean deploy -s $MVN_CONFIG_FILE -DaltReleaseDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/repository/${PROJECT_PATH}-repository-release/ -DaltSnapshotDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/repository/${PROJECT_PATH}-repository-snapshot/
-      fi
+      mvn $MAVEN_CLI_OPTS clean deploy -s $MVN_CONFIG_FILE -DaltReleaseDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/repository/${PROJECT_PATH}-repository-release/ -DaltSnapshotDeploymentRepository=nexus::default::${NEXUS_HOST_URL}/repository/${PROJECT_PATH}-repository-snapshot/
   artifacts:
     paths:
       - ${ARTEFACT_DIR}
