@@ -6,27 +6,24 @@
       aud: $VAULT_SERVER_URL
   script:
     # CA
-    - if [ ! -z $CA_BUNDLE ]; then
+    - |
+      if [ -n $CA_BUNDLE ]; then
         export VAULT_CACERT=$CA_BUNDLE;
       fi
-    - export PROJECT_PATH=`echo "$CI_PROJECT_NAMESPACE" | awk -F '/' '{print $(NF)}'`
-    - export VAULT_ADDR=$VAULT_SERVER_URL
-    - export VAULT_TOKEN="$(vault write $EXTRA_VAULT_ARGS -field=token auth/jwt/login role=default-ci jwt=$VAULT_ID_TOKEN)"
-    - export DOCKER_AUTH=`vault kv get $EXTRA_VAULT_ARGS -field=DOCKER_CONFIG ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY/rw-robot`
-    - export DOCKER_TOKEN=`vault kv get $EXTRA_VAULT_ARGS -field=TOKEN ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY/rw-robot`
-    - export REGISTRY_HOST=`vault kv get $EXTRA_VAULT_ARGS -field=HOST ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY/rw-robot`
-    - export SONAR_TOKEN=`vault kv get $EXTRA_VAULT_ARGS -field=SONAR_TOKEN ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/SONAR`
-    - export NEXUS_USERNAME=`vault kv get $EXTRA_VAULT_ARGS -field=NEXUS_USERNAME ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/NEXUS`
-    - export NEXUS_PASSWORD=`vault kv get $EXTRA_VAULT_ARGS -field=NEXUS_PASSWORD ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/NEXUS`
-    - export IMAGE_REPOSITORY="${REGISTRY_HOST}/${PROJECT_PATH}"
-    - if [[ -n $NEXUS_PASSWORD ]]; then
-    - export NEXUS_CREDS_B64=`echo -n "$NEXUS_USERNAME:$NEXUS_PASSWORD" | base64`
-    - fi  
-    - if [[ -z $DOCKER_AUTH ]]; then
-    - export DOCKER_AUTH=`vault kv get $EXTRA_VAULT_ARGS -field=DOCKER_CONFIG ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY`
-    - export REGISTRY_HOST=`vault kv get $EXTRA_VAULT_ARGS -field=HOST ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY`
-    - fi
-    - |
+      export VAULT_ADDR=$VAULT_SERVER_URL
+      VAULT_TOKEN="$(vault write $EXTRA_VAULT_ARGS -field=token auth/jwt/login role=default-ci jwt=$VAULT_ID_TOKEN)"
+      # Export in a separate command to detect potential non-zero exit code
+      export VAULT_TOKEN
+      DOCKER_AUTH=`vault kv get $EXTRA_VAULT_ARGS -field=DOCKER_CONFIG ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY/rw-robot`
+      REGISTRY_HOST=`vault kv get $EXTRA_VAULT_ARGS -field=HOST ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY/rw-robot`
+      SONAR_TOKEN=`vault kv get $EXTRA_VAULT_ARGS -field=SONAR_TOKEN ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/SONAR`
+      NEXUS_USERNAME=`vault kv get $EXTRA_VAULT_ARGS -field=NEXUS_USERNAME ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/NEXUS`
+      NEXUS_PASSWORD=`vault kv get $EXTRA_VAULT_ARGS -field=NEXUS_PASSWORD ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/NEXUS`
+      PROJECT_PATH=`echo "$CI_PROJECT_NAMESPACE" | awk -F '/' '{print $(NF)}'`
+      IMAGE_REPOSITORY="${REGISTRY_HOST}/${PROJECT_PATH}"
+      if [[ -n $NEXUS_PASSWORD ]]; then
+        NEXUS_CREDS_B64=`echo -n "$NEXUS_USERNAME:$NEXUS_PASSWORD" | base64`
+      fi  
       cat <<EOF > vault.env
       REGISTRY_HOST=$REGISTRY_HOST
       IMAGE_REPOSITORY=$IMAGE_REPOSITORY
