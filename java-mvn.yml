@@ -25,6 +25,23 @@
     expire_in: 1 seconds
   interruptible: true
 
+.java:build-custom:
+  extends: .java:init
+  script:
+    - |
+        cd $WORKING_DIR
+        echo ${PROJECT_PATH}
+        if [ ! -z $MVN_CONFIG_FILE_CUSTOM ]; then
+          mvn $MAVEN_CLI_OPTS clean package -gs $MVN_CONFIG_FILE_CUSTOM
+        else
+          mvn $MAVEN_CLI_OPTS clean package
+        fi
+  artifacts:
+    paths:
+      - ${ARTEFACT_DIR}
+    expire_in: 1 hour
+  interruptible: true
+
 .java:sonar:
   extends: .java:init
   variables:
