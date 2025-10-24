@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://gitlab.com/gitlab-org/gitlab/-/raw/master/app/assets/javascripts/editor/schema/ci.json
 
 .repo_pull_sync:
-  image: ghcr.io/cloud-pi-native/git-sync:latest
+  image: ghcr.io/cloud-pi-native/git-sync:1
   variables:
     CI_SKIP:
       value: "false"
@@ -45,9 +45,9 @@
     - | 
         if [ "${SYNC_ALL}" = 'true' ]; then 
           printf "syncing all branches\n"
-          git -c http.postBuffer=262144000 ${EXTRA_GIT_ARGS} push --force --prune --mirror "https://${GIT_OUTPUT_USER}:${GIT_OUTPUT_PASSWORD}@${GIT_OUTPUT_URL}" ${GIT_OPTIONS}
+          git -c http.postBuffer=262144000 ${EXTRA_GIT_ARGS} push --force --prune --mirror "http://${GIT_OUTPUT_USER}:${GIT_OUTPUT_PASSWORD}@${GIT_OUTPUT_URL}" ${GIT_OPTIONS}
         else
           printf "syncing branch ${GIT_BRANCH_DEPLOY}\n"
           git checkout ${GIT_BRANCH_DEPLOY} && \
-          git ${EXTRA_GIT_ARGS} push --force --prune "https://${GIT_OUTPUT_USER}:${GIT_OUTPUT_PASSWORD}@${GIT_OUTPUT_URL}" ${GIT_BRANCH_DEPLOY} ${GIT_OPTIONS}
+          git ${EXTRA_GIT_ARGS} push --force --prune "http://${GIT_OUTPUT_USER}:${GIT_OUTPUT_PASSWORD}@${GIT_OUTPUT_URL}" ${GIT_BRANCH_DEPLOY} ${GIT_OPTIONS}
         fi
