@@ -1,0 +1,32 @@
+.buildkit:build-push:
+  variables:
+    WORKING_DIR: "."
+    DOCKERFILE: Dockerfile
+    BUILDKITD_FLAGS: --oci-worker-no-process-sandbox
+    CACHE_IMAGE: $REGISTRY_URL/$IMAGE_NAME:cache
+    OUTPUT_IMAGE: $REGISTRY_URL/$IMAGE_NAME:$TAG
+    EXTRA_BUILD_ARGS: ""
+    EXTRA_BUILDKIT_ARGS: ""
+  image:
+    name: moby/buildkit:rootless
+    entrypoint: [""]
+  script:
+    # CA
+    - if [ ! -z $CA_BUNDLE ]; then cat $CA_BUNDLE >> ~/certs/additional-ca-cert-bundle.crt && export SSL_CERT_DIR="/home/user/certs"; fi
+    # Docker Authentification
+    - mkdir -p ~/.docker && echo "$DOCKER_AUTH" > ~/.docker/config.json
+    # Build
+    - |
+      buildctl-daemonless.sh build \
+        --frontend dockerfile.v0 \
+        --opt build-arg:http_proxy=$http_proxy \
+        --opt build-arg:https_proxy=$https_proxy \
+        --opt build-arg:no_proxy=$no_proxy \
+        --local context="$CI_PROJECT_DIR" \
+        --local dockerfile="$CI_PROJECT_DIR/$WORKING_DIR" \
+        --opt filename="$DOCKERFILE" \
+        --export-cache type=registry,ref=$CACHE_IMAGE \
+        --import-cache type=registry,ref=$CACHE_IMAGE \
+        --output type=image,name=$OUTPUT_IMAGE,push=true \
+        $EXTRA_BUILD_ARGS \
+        $EXTRA_BUILDKIT_ARGS
