@@ -115,6 +115,59 @@ Ce job premet de gérer les cas où le dockerfile n'est pas à la racine du work
 
 > IMAGE_NAME peut prendre plueiurs valeurs de couple image:tag séparées par des espaces
 
+## Helm Build
+
+Le fichier `helm-ci.yml` contient le job `.helm:build-push` permettant de packager et pousser des charts Helm vers Harbor en tant qu'artefacts OCI.
+
+### Fonctionnement
+
+Ce job détecte automatiquement les charts modifiés en comparant les commits Git :
+- Si aucun commit précédent n'est trouvé (`CI_COMMIT_BEFORE_SHA` absent ou nul), tous les charts sont packagés
+- Sinon, seuls les charts modifiés (dans le répertoire `charts/`) sont packagés
+
+### Paramètres
+
+| Variable           | Description                                    | Valeur par défaut         |
+| ------------------ | ---------------------------------------------- | ------------------------- |
+| `CHARTS_DIR`       | Répertoire contenant les charts Helm           | `./charts`                |
+| `IMAGE_REPOSITORY` | URL du registry OCI (Harbor)                   | Fourni par `vault-ci.yml` |
+| `DOCKER_AUTH`      | Configuration d'authentification Docker (JSON) | Fourni par `vault-ci.yml` |
+
+> Les variables `IMAGE_REPOSITORY` et `DOCKER_AUTH` sont automatiquement récupérées depuis le Vault par le job `read_secret` de `vault-ci.yml`.
+
+### Prérequis
+
+- Les charts doivent être placés dans le répertoire défini par `CHARTS_DIR` (par défaut `./charts`)
+- Chaque chart doit contenir un fichier `Chart.yaml` valide avec les champs `name` et `version`
+- La variable `DOCKER_AUTH` doit contenir les credentials pour Harbor
+
+### Exemple d'utilisation
+
+```yaml
+include:
+  - project: $CATALOG_PATH
+    file:
+      - vault-ci.yml
+      - helm-build.yml
+    ref: main
+
+stages:
+  - read-secret
+  - build
+
+helm_build:
+  stage: build
+  extends:
+    - .helm:build-push
+  variables:
+    CHARTS_DIR: ./charts
+    IMAGE_REPOSITORY: harbor.example.com/my-project/helm
+  needs:
+    - read_secret
+```
+
+> **Note** : Le job gère automatiquement les dépendances des charts si un fichier `Chart.lock` existe ou si des dépendances sont définies dans `Chart.yaml`.
+
 ## Sonar
 
 Ce job permet de lancer une analyse sonarqube du projet afin de faire une analyse statique du code pour les projets hors stack applicative Java.
