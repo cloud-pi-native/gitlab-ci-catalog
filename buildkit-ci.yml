@@ -22,7 +22,7 @@
         --opt build-arg:http_proxy=$http_proxy \
         --opt build-arg:https_proxy=$https_proxy \
         --opt build-arg:no_proxy=$no_proxy \
-        --local context="$CI_PROJECT_DIR" \
+        --local context="$CI_PROJECT_DIR/$WORKING_DIR" \
         --local dockerfile="$CI_PROJECT_DIR/$WORKING_DIR" \
         --opt filename="$DOCKERFILE" \
         --export-cache type=registry,ref=$CACHE_IMAGE \
