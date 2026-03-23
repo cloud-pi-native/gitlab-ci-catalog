@@ -35,6 +35,7 @@
       NEXUS_CREDS_B64=$NEXUS_CREDS_B64
       EOF
   artifacts:
+    access: none
     reports:
       dotenv: vault.env
     expire_in: 60 min 
