@@ -17,6 +17,7 @@ variables:
       if [ ! -z $CA_BUNDLE ]; then
         cat $CA_BUNDLE >> /tmp/additional-ca-cert-bundle.pem
         csplit -s -z -f /tmp/cert- /tmp/additional-ca-cert-bundle.pem '/-----BEGIN CERTIFICATE-----/' '{*}'
-        for f in /tmp/cert-*; do keytool -noprompt -importcert -cacerts -alias $f -file $f -storepass changeit; done
+        for f in /tmp/cert-*; do keytool -noprompt -importcert -keystore /tmp/custom-cacerts -alias $f -file $f -storepass changeit; done
+        export SONAR_SCANNER_OPTS="$SONAR_SCANNER_OPTS -Djavax.net.ssl.trustStore=/tmp/custom-cacerts -Djavax.net.ssl.trustStorePassword=changeit"
       fi
     - sonar-scanner -Dsonar.qualitygate.wait=${SONAR_WAIT_QUALITY_GATE} -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.projectVersion=${SONAR_PROJECT_VERSION} $SONAR_SCANNER_EXTRA_ARGS
