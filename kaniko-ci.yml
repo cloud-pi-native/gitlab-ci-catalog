@@ -40,6 +40,7 @@
       --single-snapshot
       --context="$CI_PROJECT_DIR/$WORKING_DIR" 
       --dockerfile="$CI_PROJECT_DIR/$DOCKERFILE" 
+      --registry-mirror="${REGISTRY_HOST}/dockerhub"
       $BUILD_ARGS $EXTRA_BUILD_ARGS $EXTRA_KANIKO_ARGS
       $ALL_DESTINATIONS
 
@@ -65,5 +66,6 @@
       --build-arg no_proxy=$no_proxy
       --context="$CI_PROJECT_DIR"
       --dockerfile="$CI_PROJECT_DIR/$WORKING_DIR/$DOCKERFILE"
+      --registry-mirror="${REGISTRY_HOST}/dockerhub"
       --destination $REGISTRY_URL/$IMAGE_NAME:$TAG
       $EXTRA_BUILD_ARGS $EXTRA_KANIKO_ARGS
