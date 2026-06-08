@@ -1,6 +1,9 @@
+variables:
+  DOCKER_REGISTRY: docker.io
+
 .vault:read_secret:
   image:
-    name: docker.io/hashicorp/vault:1.17.1
+    name: $DOCKER_REGISTRY/hashicorp/vault:1.17.1
   id_tokens:
     VAULT_ID_TOKEN:
       aud: $VAULT_SERVER_URL
@@ -17,25 +20,33 @@
       DOCKER_AUTH=`vault kv get $EXTRA_VAULT_ARGS -field=DOCKER_CONFIG ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY/rw-robot`
       REGISTRY_HOST=`vault kv get $EXTRA_VAULT_ARGS -field=HOST ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/REGISTRY/rw-robot`
       SONAR_TOKEN=`vault kv get $EXTRA_VAULT_ARGS -field=SONAR_TOKEN ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/SONAR`
-      NEXUS_USERNAME=`vault kv get $EXTRA_VAULT_ARGS -field=NEXUS_USERNAME ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/NEXUS`
-      NEXUS_PASSWORD=`vault kv get $EXTRA_VAULT_ARGS -field=NEXUS_PASSWORD ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/NEXUS`
+
+      # Check if NEXUS path exists in Vault
+      if vault kv get $EXTRA_VAULT_ARGS ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/NEXUS >/dev/null 2>&1; then
+        NEXUS_USERNAME=`vault kv get $EXTRA_VAULT_ARGS -field=NEXUS_USERNAME ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/NEXUS`
+        NEXUS_PASSWORD=`vault kv get $EXTRA_VAULT_ARGS -field=NEXUS_PASSWORD ${VAULT_KV}/${CI_PROJECT_NAMESPACE}/NEXUS`
+        if [[ -n "$NEXUS_PASSWORD" ]]; then
+          NEXUS_CREDS_B64=`echo -n "$NEXUS_USERNAME:$NEXUS_PASSWORD" | base64`
+        fi
+      else
+        echo "NEXUS path does not exist in Vault. Skipping Nexus-related values."
+      fi
+
       PROJECT_PATH=`echo "$CI_PROJECT_NAMESPACE" | awk -F '/' '{print $(NF)}'`
       IMAGE_REPOSITORY="${REGISTRY_HOST}/${PROJECT_PATH}"
-      if [[ -n $NEXUS_PASSWORD ]]; then
-        NEXUS_CREDS_B64=`echo -n "$NEXUS_USERNAME:$NEXUS_PASSWORD" | base64`
-      fi  
+
       cat <<EOF > vault.env
       REGISTRY_HOST=$REGISTRY_HOST
       IMAGE_REPOSITORY=$IMAGE_REPOSITORY
       PROJECT_PATH=$PROJECT_PATH
       DOCKER_AUTH=$DOCKER_AUTH
       SONAR_TOKEN=$SONAR_TOKEN
-      NEXUS_USERNAME=$NEXUS_USERNAME
-      NEXUS_PASSWORD=$NEXUS_PASSWORD
-      NEXUS_CREDS_B64=$NEXUS_CREDS_B64
+      NEXUS_USERNAME=${NEXUS_USERNAME:-}
+      NEXUS_PASSWORD=${NEXUS_PASSWORD:-}
+      NEXUS_CREDS_B64=${NEXUS_CREDS_B64:-}
       EOF
   artifacts:
     access: none
     reports:
       dotenv: vault.env
-    expire_in: 60 min 
+    expire_in: 60 min

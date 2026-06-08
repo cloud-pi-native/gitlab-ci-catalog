@@ -53,11 +53,11 @@ publish-npm-nexus:
   variables:
     BUILD_IMAGE_NAME: node:lts-bullseye
     WORKING_DIR: .
-    ARTEFACT_DIR: 'out/'
-    PRIVATE_GROUPS: ''
+    ARTEFACT_DIR: "out/"
+    PRIVATE_GROUPS: ""
     AUTODETECT_PRIVATE_GROUP: 1
   stage: build-app
-  extends: 
+  extends:
     - .npm:build-publish
 
 sonar-app:
@@ -71,7 +71,6 @@ sonar-app:
   stage: sonar
   extends:
     - .java:sonar
-
 
 # Docker build et push de l'image sur le repo Harbor
 docker-build:

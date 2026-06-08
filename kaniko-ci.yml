@@ -1,3 +1,6 @@
+variables:
+  GHCR_REGISTRY: ghcr.io
+
 .kaniko:build-push:
   variables:
     DOCKERFILE: Dockerfile
@@ -5,7 +8,7 @@
     IMAGE_NAMES: $CI_PROJECT_NAME:$CI_COMMIT_BRANCH $CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA $CI_PROJECT_NAME:latest
     EXTRA_BUILD_ARGS: ""
   image:
-    name: ghcr.io/kaniko-build/dist/chainguard-dev-kaniko/executor:v1.25.1-debug
+    name: $GHCR_REGISTRY/kaniko-build/dist/chainguard-dev-kaniko/executor:v1.25.1-debug
     entrypoint: [""]
   script:
     # CA
@@ -36,10 +39,10 @@
     - for I in $IMAGE_NAMES; do export ALL_DESTINATIONS="$ALL_DESTINATIONS --destination $IMAGE_REPOSITORY/$(echo $I | tr \/ '-')"; done
     - mkdir -p /kaniko/.docker
     - echo "$DOCKER_AUTH" > /kaniko/.docker/config.json
-    - /kaniko/executor 
+    - /kaniko/executor
       --single-snapshot
-      --context="$CI_PROJECT_DIR/$WORKING_DIR" 
-      --dockerfile="$CI_PROJECT_DIR/$DOCKERFILE" 
+      --context="$CI_PROJECT_DIR/$WORKING_DIR"
+      --dockerfile="$CI_PROJECT_DIR/$DOCKERFILE"
       $BUILD_ARGS $EXTRA_BUILD_ARGS $EXTRA_KANIKO_ARGS
       $ALL_DESTINATIONS
 
@@ -50,7 +53,7 @@
     IMAGE_NAME: $IMAGE_NAMES
     EXTRA_BUILD_ARGS: ""
   image:
-    name: ghcr.io/kaniko-build/dist/chainguard-dev-kaniko/executor:v1.25.1-debug
+    name: $GHCR_REGISTRY/kaniko-build/dist/chainguard-dev-kaniko/executor:v1.25.1-debug
     entrypoint: [""]
   script:
     # CA
