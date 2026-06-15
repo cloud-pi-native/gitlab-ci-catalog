@@ -1,5 +1,8 @@
+variables:
+  DOCKER_REGISTRY: docker.io
+
 .helm:build-push:
-  image: alpine/helm:latest
+  image: $DOCKER_REGISTRY/alpine/helm:latest
   variables:
     CHARTS_DIR: ./charts
   script:

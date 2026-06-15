@@ -1,12 +1,13 @@
 variables:
-  SONAR_SCANNER_EXTRA_ARGS: ''
+  DOCKER_REGISTRY: docker.io
+  SONAR_SCANNER_EXTRA_ARGS: ""
   SONAR_PROJECT_KEY: ${PROJECT_KEY}
   SONAR_PROJECT_VERSION: ${CI_COMMIT_REF_NAME}
-  SONAR_WAIT_QUALITY_GATE: 'true'
+  SONAR_WAIT_QUALITY_GATE: "true"
 
 .sonar:sonar-scanner:
-  image: 
-    name: docker.io/sonarsource/sonar-scanner-cli:11
+  image:
+    name: $DOCKER_REGISTRY/sonarsource/sonar-scanner-cli:11
     entrypoint: [""]
   variables:
     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"

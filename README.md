@@ -54,12 +54,12 @@ Le build d'un artefact Java/Maven
 L'étape `build-java` permet de construire un artefact java (jar) via le gestionnaire de cycle de vie Maven et la commande `mvn clean package`.
 
 Il prend les paramètres suivants :
-  - `MAVEN\_OPTS` : `-Dmaven.repo.local=$CI\_PROJECT\_DIR/.m2/repository`. À positionner a minima à cette valeur
-  - `MAVEN\_CLI\_OPTS` : `""`. Options Maven supplémentaires ajoutées à `clean package`
-  - `MVN\_CONFIG\_FILE` : `$MVN\_CONFIG`.Fichier de configuration Maven, ici on utilise la variable `$MVN\_CONFIG` qui contient la configuration pour le projet.
-  - `BUILD\_IMAGE\_NAME` : `maven:3.8-openjdk-17`. Image utilisée pour construire l'artefact
-  - `WORKING\_DIR` : `.`. Répertoire de travail, la racine contenant le fichier pom.xml du projet
-  - `ARTEFACT\_DIR` : `./target/*.jar`. Répertoire contenant les artefacts générés par le build
+  - `MAVEN_OPTS` : `-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository`. À positionner a minima à cette valeur
+  - `MAVEN_CLI_OPTS` : `""`. Options Maven supplémentaires ajoutées à `clean package`
+  - `MVN_CONFIG_FILE` : `$MVN_CONFIG`.Fichier de configuration Maven, ici on utilise la variable `$MVN_CONFIG` qui contient la configuration pour le projet.
+  - `BUILD_IMAGE_NAME` : `$DOCKER_REGISTRY/maven:3.8-openjdk-17`. Image utilisée pour construire l'artefact
+  - `WORKING_DIR` : `.`. Répertoire de travail, la racine contenant le fichier pom.xml du projet
+  - `ARTEFACT_DIR` : `./target/*.jar`. Répertoire contenant les artefacts générés par le build
 
  ### Sonar Java et Sonar Java JaCoCo
 
@@ -86,7 +86,7 @@ Paramètres :
   - `WORKING_DIR: .` : Répertoire de travail, contenant le fichier `package.json` du projet
   - `AUTODETECT_PRIVATE_GROUP: 1` : Mettre à `0` pour désactiver la détection automatique des paquets privés
   - `ARTEFACT_DIR: out` : Le dossier contenant les fichiers générés par votre build NPM
-  - `BUILD_IMAGE_NAME: node:lts-bullseye` : Image utilisée pour construire l'artefact
+  - `BUILD_IMAGE_NAME: $DOCKER_REGISTRY/node:lts-bullseye` : Image utilisée pour construire l'artefact
 
 ## Build docker
 

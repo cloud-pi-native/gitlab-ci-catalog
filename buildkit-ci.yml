@@ -1,3 +1,6 @@
+variables:
+  DOCKER_REGISTRY: docker.io
+
 .buildkit:build-push:
   variables:
     WORKING_DIR: "."
@@ -9,7 +12,7 @@
     EXTRA_BUILD_ARGS: ""
     EXTRA_BUILDKIT_ARGS: ""
   image:
-    name: moby/buildkit:rootless
+    name: $DOCKER_REGISTRY/moby/buildkit:rootless
     entrypoint: [""]
   script:
     # CA
